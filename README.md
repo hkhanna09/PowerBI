@@ -32,27 +32,27 @@ If you have a shared location where all the modules get installed, it's a good p
 
 Get-Module -ListAvailable MicrosoftPowerBI* | Import-Module
 Login to PBI.
-Next, you need to login to PBI using SPN you created initially.
+Next, you need to log in to PBI using SPN you created initially.
 
-Tip: If you are using the local system for executing the script. You'll first need to install the AZ Powershell module and login to Azure using the below command.
+Tip: If you are using the local system for executing the script. You'll first need to install the AZ Powershell module and log in to Azure using the below command.
 
 Connect-AzAccount
-Use below code to login PBI.
+Use the below code to log in to PBI.
 
 $Password = ConvertTo-SecureString $Secret -AsPlainText -Force
 $creds = New-Object PSCredential $AppID, $Password
 
 
 Connect-PowerBIServiceAccount -ServicePrincipal -credential $Creds -Tenant $TenantID
-If, during the execution of the script or any PBI command you get below error. Worry not, I've a workaround.
+If, during the execution of the script or any PBI command you get the below error. Worry not, I've got a workaround.
 
 Get-PowerBIWorkspace : Could not load file or assembly 'Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed' or one of its dependencies. The system cannot find the file specified.
 Once you encounter the error, execute the below command and note down the location (FullyQualifiedName) of Newtonsoft.Json.
 
 [Newtonsoft.Json.JsonConvert].Module
-You'll also see the Version under Assembly key. What happen here is that your connection to PBI requires the Newtonsoft.Json file version 11.0.0.0. However, your system has another version. We need to get v11 on the system. To do that, you need to download the Newtonsoft.Json package from Here.
+You'll also see the Version under the Assembly key. What happened here is that your connection to PBI requires the Newtonsoft.Json file version 11.0.0.0. However, your system has another version. We need to get v11 on the system. To do that, you need to download the Newtonsoft.Json package from Here.
 
-Once, you have the package extract it using 7zip or a similar tool and copy the DLL file from the lib/net45 directory. Then go to the Newtonsoft.Json location you got in the previous step. Rename the existing dll and paste new one and restart your powershell. Now, the error should be resolved. 
+Once, you have the package extract it using 7zip or a similar tool and copy the DLL file from the lib/net45 directory. Then go to the Newtonsoft.Json location you got in the previous step. Rename the existing DLL and paste a new one and restart your PowerShell. Now, the error should be resolved. 
 
 Publish PBIX.
 Once you are logged in try to Get the existing Workspace.
@@ -64,7 +64,7 @@ New-PowerBIReport -Path $ReportPath -Name $ReportName -WorkspaceId $Workspace.Id
 Tip: Using, -ConflictAction CreateOrOverwrite will either create a new report if it does not already exist with the same name or will overwrite the existing one. Thus you will not have multiple reports or datasets with the same name.
 
 Take Over Report.
-There is a possibility that some user might have logged in to PBI UI portal and takes over the dataset to make any change or review something. So we could get an error while making any update in the dataset/datasource. So we need to Take Over via API to make sure the next steps run smoothly.
+There is a possibility that some other user might have logged in to the PBI UI portal and takes over the dataset to make any change or review something. So we could get an error while making any update in the dataset/datasource. So we need to Take Over via API to make sure the next steps run smoothly.
 
 Invoke-PowerBIRestMethod -Method Post -Url groups/$($Workspace.Id.Guid)/datasets/$($Report.DatasetId)/Default.TakeOver -WarningAction Ignore
 Update Dataset Parameters.
@@ -73,11 +73,11 @@ Your report might have N number of parameters that might differ for each Environ
 $Parameters = @{
         "updateDetails"= @(
             @{
-                "name"="$($ParamName1)";
+                "name"="$($ParamDbName)";
                 "newValue"="$($DbName)";
              },
             @{
-                "name"="$($ParamName2)";
+                "name"="$($ParamDbServerName)";
                 "newValue"="$($DbServer)";
              }            
         )
@@ -90,7 +90,7 @@ You can check parameters before and after making changes to make sure it's worki
 $Response = Invoke-PowerBIRestMethod -Method Get -Url groups/$($Workspace.Id.Guid)/datasets/$($Report.DatasetId)/parameters | ConvertFrom-Json
 $Response.value | Select-Object name, currentValue
 Update Datasource (SQL Credentials).
-To get the data from DB you need to provide credentials, which will be different for each environment. Using below code you can set these credentials.
+To get the data from DB you need to provide credentials, which will be different for each environment. Using the below code you can set these credentials.
 
 $Dataset = Get-PowerBIDataset -WorkspaceId $Workspace.Id -Id $Report.DatasetId
 $WorkspaceId = $Workspace.Id
@@ -146,7 +146,7 @@ $refresh = Invoke-PowerBIRestMethod -Method Get -Url groups/$($Workspace.Id.Guid
 
 $refresh.value[0,1]
 Create Refresh Schedule.
-You might need a refresh schedule to make sure the Report shows the latest data from DB and Dataset fetches it on periodic intervals.
+You might need a refresh schedule to make sure the report shows the latest data from DB and Dataset fetches it on periodic intervals.
 
 $ScheduleJsonEnable = '{
         "value":
@@ -161,23 +161,20 @@ $ScheduleJsonEnable = '{
 
 
 Invoke-PowerBIRestMethod -Method Patch -Url groups/$($Workspace.Id.Guid)/datasets/$($Report.DatasetId)/refreshSchedule -Body $ScheduleJsonEnable
-Tip: Currently API doesnot respond well to two parameters:
+Tip: Currently API doesn't respond well to two parameters:
 
 TimeZone other than UTC
 notifyOption other than NoNotification
-Bonus Tip:  While execution I found that as soon as I publish Report Refresh Schedule Kicks in and the Script tends to fail as Dataset starts the referesh and becomes unresponsive. To deal with this, at beginning of script I disabled the Refresh Schedule.
+Bonus Tip:  While execution I found that as soon as I publish Report Refresh Schedule Kicks in and the Script tends to fail as Dataset starts the refresh and becomes unresponsive. To deal with this, at beginning of the script I disabled the Refresh Schedule.
 
 Bonus Script.
-I will provide two scripts one is ADO specific and one for execution from PowerShell. Both scripts can be executed on any platform. However, ADO does not supports the usual Background and Foreground colors as PowerShell. Hence some modifications to the script were done to show colors in ADO logs.
+I will provide two scripts one is ADO specific and one for execution from PowerShell. Both scripts can be executed on any platform. However, ADO does not support the usual Background and Foreground colors as PowerShell. Hence some modifications to the script were done to show colors in ADO logs.
 
 Reference:
 I lost track of Forums and Articles I went through to find the right commands for different tasks. Therefore, I thank the Authors and members for their contributions. If you see a part of your contribution in my script, let me know so that I can give credit to you with your Article URL.
 
-If you want to check more features from Power BI API. Check below MS Documentation.
-
 https://docs.microsoft.com/en-us/rest/api/power-bi/
 https://docs.microsoft.com/en-us/powershell/power-bi/overview?view=powerbi-ps
+https://community.powerbi.com/
 Download Scripts.
-You can download the scripts from GitHub using below URL.
-
-https://github.com/hkhanna09/PowerBI
+Click here to download the scripts from GitHub.
