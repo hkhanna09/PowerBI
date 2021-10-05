@@ -173,7 +173,7 @@ throw
             $NewReport = New-PowerBIReport -Path $ReportPath -Name $ReportName -WorkspaceId $Workspace.Id -ConflictAction CreateOrOverwrite
             Start-Sleep -Seconds 30
             $Report = Get-PowerBIReport -WorkspaceId $Workspace.Id -Id $NewReport.Id
-            Write-Host "##[section]--> "Report Replaced Successfully.`n"
+            Write-Host "##[section]--> Report Replaced Successfully.`n"
 
             $OldReportid = $OldReport.Id
             $OldDatasetId = $OldReport.DatasetId
