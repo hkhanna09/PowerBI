@@ -163,7 +163,7 @@ $ScheduleJsonDisable = '{
                     }
             else
                     {
-                        Write-Host "##[error]-->Refresh Schedule Disable NOT Successful.`n"
+                        Write-Host "##[error]-->Refresh Schedule Disable NOT Successful. Maybe refresh schedule was not created/enabled for this report.`n"
                     Resolve-PowerBIError -Last
 throw
                     }
@@ -323,7 +323,7 @@ foreach($Datasource in $Datasources) {
     }
 else
     {
-    Write-Host "##[error]-->Credential Update NOT Successful.`n"
+    Write-Host "##[error]-->Credential Update NOT Successful. DB name/DB Server Name/DB user/DB password could be incorrect. You are advised not to use \ or $ in DB username or password`n"
 Resolve-PowerBIError -Last
 throw
     }
