@@ -58,19 +58,19 @@ Publish PBIX.
 Once you are logged in try to Get the existing Workspace.
 
 Get-PowerBIWorkspace -Name $WorkSpaceName
-If, you can get successful output then try to Publish a new report.
+If, you can get a successful output then try to Publish a new report.
 
 New-PowerBIReport -Path $ReportPath -Name $ReportName -WorkspaceId $Workspace.Id -ConflictAction CreateOrOverwrite
 Tip: Using, -ConflictAction CreateOrOverwrite will either create a new report if it does not already exist with the same name or will overwrite the existing one. Thus you will not have multiple reports or datasets with the same name.
 
 Take Over Report.
-There is a possibility that some other user might have logged in to the PBI UI portal and takes over the dataset to make any change or review something. So we could get an error while making any update in the dataset/datasource. So we need to Take Over via API to make sure the next steps run smoothly.
+There is a possibility that some other user might have logged in to the PBI UI portal and taken over the dataset to make any change or review something. So we could get an error while making any update in the dataset/datasource. So we need to Take Over via API to make sure the next steps run smoothly.
 
 Invoke-PowerBIRestMethod -Method Post -Url groups/$($Workspace.Id.Guid)/datasets/$($Report.DatasetId)/Default.TakeOver -WarningAction Ignore
 Update Dataset Parameters.
 Your report might have N number of parameters that might differ for each Environment For Example - DB Server and DB Name will be different for Dev, QA & PROD.
 
-$Parameters = @{
+`$Parameters = @{
         "updateDetails"= @(
             @{
                 "name"="$($ParamDbName)";
@@ -81,7 +81,7 @@ $Parameters = @{
                 "newValue"="$($DbServer)";
              }            
         )
-}
+}`
 
 $ParametersJson = $Parameters | ConvertTo-Json -Compress
 $UpdateParam = Invoke-PowerBIRestMethod -Method Post -Body $ParametersJson -Url groups/$($Workspace.Id.Guid)/datasets/$($Report.DatasetId)/Default.UpdateParameters
@@ -131,7 +131,7 @@ foreach($Datasource in $Datasources) {
 
 # Execute PATCH operation to set datasource credentials
   $CredUpdate = Invoke-PowerBIRestMethod -Method Patch -Url $DatasourePatchUrl -Body $patchBodyJson
-}
+
 Tip: Make sure that DB Password does not contain \ or $
 
 Refresh Dataset.
